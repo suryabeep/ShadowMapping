@@ -1,0 +1,4 @@
+*.pdf
+.vscode/
+teapot.obj
+triangle.obj
