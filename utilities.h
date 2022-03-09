@@ -80,53 +80,13 @@ unsigned int loadCubemap(std::vector<std::string> faces) {
     return textureID;
 }
 
-// simple OBJ file loader modified from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
-bool loadObj (const char * path, std::vector < glm::vec3 > & out_vertices, std::vector < glm::ivec3 > & out_faces) {
+
+bool loadObj (const char* path, std::vector<glm::vec3> &out_vertices, std::vector<glm::vec3> &out_normals, std::vector<glm::vec2> &out_texcoords) {
     FILE* file = fopen(path, "r");
     if (file == NULL) {
         fprintf(stderr, "Unable to open the file! \n");
         return false;
     }
-
-    // read line by line until EOF
-    while (true) {
-        char lineHeader[128];
-        int res = fscanf(file, "%s", lineHeader);
-        if (res == EOF) {
-            break;
-        }
-
-        if (strcmp(lineHeader, "v") == 0) {
-            glm::vec3 vertex;
-            fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-            out_vertices.push_back(vertex);
-        }
-        else if (strcmp(lineHeader, "f") == 0) {
-            glm::ivec3 face;
-            fscanf(file, "%d %d %d\n", &face.x, &face.y, &face.z);
-            // adjust indexing
-            face -= glm::ivec3(1, 1, 1);
-            out_faces.push_back(face);
-        }
-    }
-    return true;
-}
-
-// math from https://math.stackexchange.com/a/2686620
-glm::vec4 computePlaneCoeffs(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
-    glm::vec3 first_3 = glm::cross(b - a, c - a);
-    float k = -glm::dot(first_3, a);
-    return glm::vec4(first_3, k);
-}
-
-bool loadObj (const char* path, std::vector<glm::vec3> &out_vertices, std::vector<glm::ivec3> &out_faces, std::vector<glm::vec3> &out_normals) {
-    FILE* file = fopen(path, "r");
-    if (file == NULL) {
-        fprintf(stderr, "Unable to open the file! \n");
-        return false;
-    }
-
-    std::cerr << "Made it to line " << __LINE__ << std::endl;
 
     std::vector<glm::vec3> temp_positions;
     std::vector<glm::vec3> temp_normals;
@@ -189,11 +149,40 @@ bool loadObj (const char* path, std::vector<glm::vec3> &out_vertices, std::vecto
             out_normals.push_back(temp_normals[normal_indices.x]);
             out_normals.push_back(temp_normals[normal_indices.y]);
             out_normals.push_back(temp_normals[normal_indices.z]);
+
+            assert(tex_indices.x < temp_texcoords.size());
+            assert(tex_indices.y < temp_texcoords.size());
+            assert(tex_indices.z < temp_texcoords.size());
+
+            out_texcoords.push_back(temp_texcoords[tex_indices.x]);
+            out_texcoords.push_back(temp_texcoords[tex_indices.y]);
+            out_texcoords.push_back(temp_texcoords[tex_indices.z]);
         }
         
     }
 
-    std::cerr << "Made it to line " << __LINE__ << std::endl;
-
     return true;
 }
+
+
+GLenum glCheckError_(const char *file, int line)
+{
+    GLenum errorCode;
+    while ((errorCode = glGetError()) != GL_NO_ERROR)
+    {
+        std::string error;
+        switch (errorCode)
+        {
+            case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+            case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+            case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+            case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+            case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+            case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+        }
+        std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+    }
+    return errorCode;
+}
+#define glCheckError() glCheckError_(__FILE__, __LINE__) 

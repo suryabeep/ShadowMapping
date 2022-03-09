@@ -9,11 +9,7 @@
 class Model {
 public:
     Model(const char* path) {
-        loadObj(path, _vertices, _faces, _normals);
-
-        fprintf(stderr, "Vertices size is %lu\n", _vertices.size());
-        fprintf(stderr, "Normals size is %lu\n", _normals.size());
-        fprintf(stderr, "Faces size is %lu\n", _faces.size());
+        loadObj(path, _vertices, _normals, _texcoords);
     }
 
     void setupBuffers();
@@ -22,13 +18,13 @@ public:
 
 private:
     std::vector<glm::vec3> _vertices;
+    std::vector<glm::vec2> _texcoords;
     std::vector<glm::vec3> _normals;
-    std::vector<glm::ivec3> _faces;
 
     GLuint _vao;
     GLuint _vertexBuffer;
+    GLuint _texcoordBuffer;
     GLuint _normalBuffer;
-    GLuint _faceBuffer;
 };
 
 void Model::setupBuffers() {
@@ -49,13 +45,19 @@ void Model::setupBuffers() {
     glVertexAttribPointer(1, 3, GL_FLOAT, false, sizeof(glm::vec3), (void *) 0);
     glEnableVertexAttribArray(1);
 
+    // texcoord buffer
+    glGenBuffers(1, &_texcoordBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _texcoordBuffer);
+    glBufferData(GL_ARRAY_BUFFER, _texcoords.size() * sizeof(_texcoords.at(0)), _texcoords.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(glm::vec2), (void *) 0);
+    glEnableVertexAttribArray(2);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
 void Model::deleteGLResources() {
     glDeleteBuffers(1, &_vertexBuffer);
-    glDeleteBuffers(1, &_faceBuffer);
     glDeleteVertexArrays(1, &_vao);
 }
 
