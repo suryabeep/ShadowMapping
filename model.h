@@ -58,6 +58,8 @@ void Model::setupBuffers() {
 
 void Model::deleteGLResources() {
     glDeleteBuffers(1, &_vertexBuffer);
+    glDeleteBuffers(1, &_texcoordBuffer);
+    glDeleteBuffers(1, &_normalBuffer);
     glDeleteVertexArrays(1, &_vao);
 }
 

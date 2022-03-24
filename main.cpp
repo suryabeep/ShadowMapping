@@ -50,26 +50,15 @@ int main()
     Shader *basicShader = new Shader("shaders/basic.vert", "shaders/basic.frag");
     Shader *depthShader = new Shader("shaders/simpleDepth.vert", "shaders/simpleDepth.frag");
 
-
     Model *cube1 = new Model("cube.obj");
     cube1->setupBuffers();
-
-    Model *cube2 = new Model("cube.obj");
-    cube2->setupBuffers();
-
-    Model *floorCube = new Model("cube.obj");
-    floorCube->setupBuffers();
-
-    Model *flashCube = new Model("cube.obj");
-    flashCube->setupBuffers();
+    GLuint brickTexture = loadTexture("resources/brickwall.jpg");
 
     // set up buffers for the dubgging quad
     Shader* passthroughShader = new Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
-   
     GLuint quadVAO;
     GLuint quadVerticesBuffer;
     GLuint quadTexCoordsBuffer;
-
     float quadVertices[18] = {
         -1.0, -1.0, 0.0,
         0.0, -1.0, 0.0,
@@ -78,7 +67,6 @@ int main()
         0.0, -1.0, 0.0,
         0.0, 0.0, 0.0
     };
-
     float quadTexCoords[12] {
         0.0, 0.0,
         1.0, 0.0,
@@ -87,26 +75,20 @@ int main()
         1.0, 0.0,
         1.0, 1.0
     };
-
     glGenVertexArrays(1, &quadVAO);
     glBindVertexArray(quadVAO);
-   
-
     // vertex buffer
     glGenBuffers(1, &quadVerticesBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, quadVerticesBuffer);
     glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), &quadVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
-   
-
     // texcoord buffer
     glGenBuffers(1, &quadTexCoordsBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, quadTexCoordsBuffer);
     glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), &quadTexCoords, GL_STATIC_DRAW);
     glVertexAttribPointer(1, 2, GL_FLOAT, false, 2 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(1);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
    
@@ -114,7 +96,6 @@ int main()
     glm::mat4 modelMat = glm::mat4(1);
     glm::mat4 view;
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    
     auto trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5, -2.0));
     auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(10, 0.5, 10));
 
@@ -180,12 +161,12 @@ int main()
             // cube2
             modelMat = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 2.0f, -3.0f));
             depthShader->setMat4("model", modelMat);
-            cube2->draw();
+            cube1->draw();
 
             // floor
             modelMat = trans * scale;
             depthShader->setMat4("model", modelMat);
-            floorCube->draw();
+            cube1->draw();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -216,6 +197,7 @@ int main()
         basicShader->setMat4("view", view);
         basicShader->setMat4("projection", projection);
         basicShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         basicShader->setInt("depthMap", 0);
@@ -228,17 +210,17 @@ int main()
         // cube2
         modelMat = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 2.0f, -3.0f));
         basicShader->setMat4("model", modelMat);
-        cube2->draw();
+        cube1->draw();
 
         // floor
         modelMat = trans * scale;
         basicShader->setMat4("model", modelMat);
-        floorCube->draw();
+        cube1->draw();
 
         // lightCube
         modelMat = glm::translate(glm::mat4(1.0f), lightPos) * glm::scale(glm::mat4(1.0f), glm::vec3(0.3));
         basicShader->setMat4("model", modelMat);
-        flashCube->draw();
+        cube1->draw();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -247,11 +229,7 @@ int main()
     }
 
     cube1->deleteGLResources();
-    cube2->deleteGLResources();
-    floorCube->deleteGLResources();
     delete cube1;
-    delete cube2;
-    delete floorCube;
     delete basicShader;
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
